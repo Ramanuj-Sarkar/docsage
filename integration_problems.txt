@@ -1,0 +1,348 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________________ test_single_run_traces_to_both_platforms ___________________
+
+self = PydanticOutputParser(pydantic_object=<class 'docsage.prompts.GradeDocuments'>)
+result = [ChatGeneration(text='Yes', message=AIMessage(content='Yes', additional_kwargs={'refusal': None}, response_metadata={'...ns': 87, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}))]
+partial = False
+
+    @override
+    def parse_result(self, result: list[Generation], *, partial: bool = False) -> Any:
+        """Parse the result of an LLM call to a JSON object.
+    
+        Args:
+            result: The result of the LLM call.
+            partial: Whether to parse partial JSON objects.
+    
+                If `True`, the output will be a JSON object containing all the keys that
+                have been returned so far.
+    
+                If `False`, the output will be the full JSON object.
+    
+        Returns:
+            The parsed JSON object.
+    
+        Raises:
+            OutputParserException: If the output is not valid JSON.
+        """
+        text = result[0].text
+        text = text.strip()
+        if partial:
+            try:
+                return parse_json_markdown(text)
+            except JSONDecodeError:
+                return None
+        else:
+            try:
+>               return parse_json_markdown(text)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/json.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.14/site-packages/langchain_core/utils/json.py:163: in parse_json_markdown
+    return _parse_json(json_str, parser=parser)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/utils/json.py:191: in _parse_json
+    return parser(json_str)
+           ^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/utils/json.py:136: in parse_partial_json
+    return json.loads(s, strict=strict)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py:365: in loads
+    return cls(**kw).decode(s)
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py:345: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x111b7a8a0>, s = 'Yes', idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py:363: JSONDecodeError
+
+The above exception was the direct cause of the following exception:
+
+    def test_single_run_traces_to_both_platforms() -> None:
+        _skip_unless_credentials()
+        assert apply_tracing_env(), "LangSmith tracing is not enabled in settings"
+        assert apply_langfuse_env(), "LangFuse credentials are incomplete"
+    
+        retriever = build_retriever(DOCS, embeddings=HashEmbeddings(size=256), k=1)
+        graph = build_graph(get_chat_model(), retriever)
+        handler = get_langfuse_handler()
+        thread_id = f"dual-{uuid.uuid4().hex[:8]}"
+    
+>       result = graph.invoke(
+            {"question": "What is LangGraph?"},
+            config={
+                "configurable": {"thread_id": thread_id},
+                "callbacks": [handler] if handler else [],
+            },
+        )
+
+tests/integration/test_langfuse_trace.py:67: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.14/site-packages/langgraph/pregel/main.py:3913: in invoke
+    for chunk in self.stream(
+.venv/lib/python3.14/site-packages/langgraph/pregel/main.py:2967: in stream
+    for _ in runner.tick(
+.venv/lib/python3.14/site-packages/langgraph/pregel/_runner.py:207: in tick
+    run_with_retry(
+.venv/lib/python3.14/site-packages/langgraph/pregel/_retry.py:617: in run_with_retry
+    return task.proc.invoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langgraph/_internal/_runnable.py:707: in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langgraph/_internal/_runnable.py:447: in invoke
+    ret = self.func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/docsage/graph/nodes.py:44: in grade
+    parsed = chain.invoke({"document": doc.page_content, "question": state["question"]})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/runnables/base.py:3456: in invoke
+    input_ = context.run(step.invoke, input_, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/base.py:211: in invoke
+    return self._call_with_config(
+.venv/lib/python3.14/site-packages/langchain_core/runnables/base.py:2301: in _call_with_config
+    context.run(
+.venv/lib/python3.14/site-packages/langchain_core/runnables/config.py:526: in call_func_with_variable_args
+    return func(input, **kwargs)  # type: ignore[call-arg]
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/base.py:212: in <lambda>
+    lambda inner_input: self.parse_result(
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/pydantic.py:77: in parse_result
+    json_object = super().parse_result(result, partial=partial)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PydanticOutputParser(pydantic_object=<class 'docsage.prompts.GradeDocuments'>)
+result = [ChatGeneration(text='Yes', message=AIMessage(content='Yes', additional_kwargs={'refusal': None}, response_metadata={'...ns': 87, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}))]
+partial = False
+
+    @override
+    def parse_result(self, result: list[Generation], *, partial: bool = False) -> Any:
+        """Parse the result of an LLM call to a JSON object.
+    
+        Args:
+            result: The result of the LLM call.
+            partial: Whether to parse partial JSON objects.
+    
+                If `True`, the output will be a JSON object containing all the keys that
+                have been returned so far.
+    
+                If `False`, the output will be the full JSON object.
+    
+        Returns:
+            The parsed JSON object.
+    
+        Raises:
+            OutputParserException: If the output is not valid JSON.
+        """
+        text = result[0].text
+        text = text.strip()
+        if partial:
+            try:
+                return parse_json_markdown(text)
+            except JSONDecodeError:
+                return None
+        else:
+            try:
+                return parse_json_markdown(text)
+            except JSONDecodeError as e:
+                msg = f"Invalid json output: {text}"
+>               raise OutputParserException(msg, llm_output=text) from e
+E               langchain_core.exceptions.OutputParserException: Invalid json output: Yes
+E               For troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE 
+E               During task with name 'grade' and id 'dac8880e-e6dd-a3fb-56d8-1408fd28879b'
+
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/json.py:91: OutputParserException
+------------------------------ Captured log call -------------------------------
+WARNING  langfuse:get_client.py:144 No Langfuse client with public key pk-lf-c5258786-e9e5-4789-9725-40d48e8048ae has been initialized. Skipping tracing for decorated function.
+____________________ test_real_run_creates_langsmith_trace _____________________
+
+self = PydanticOutputParser(pydantic_object=<class 'docsage.prompts.GradeDocuments'>)
+result = [ChatGeneration(text='Yes', message=AIMessage(content='Yes', additional_kwargs={'refusal': None}, response_metadata={'...ns': 87, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}))]
+partial = False
+
+    @override
+    def parse_result(self, result: list[Generation], *, partial: bool = False) -> Any:
+        """Parse the result of an LLM call to a JSON object.
+    
+        Args:
+            result: The result of the LLM call.
+            partial: Whether to parse partial JSON objects.
+    
+                If `True`, the output will be a JSON object containing all the keys that
+                have been returned so far.
+    
+                If `False`, the output will be the full JSON object.
+    
+        Returns:
+            The parsed JSON object.
+    
+        Raises:
+            OutputParserException: If the output is not valid JSON.
+        """
+        text = result[0].text
+        text = text.strip()
+        if partial:
+            try:
+                return parse_json_markdown(text)
+            except JSONDecodeError:
+                return None
+        else:
+            try:
+>               return parse_json_markdown(text)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/json.py:88: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.14/site-packages/langchain_core/utils/json.py:163: in parse_json_markdown
+    return _parse_json(json_str, parser=parser)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/utils/json.py:191: in _parse_json
+    return parser(json_str)
+           ^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/utils/json.py:136: in parse_partial_json
+    return json.loads(s, strict=strict)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py:365: in loads
+    return cls(**kw).decode(s)
+           ^^^^^^^^^^^^^^^^^^^
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py:345: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x114afc260>, s = 'Yes', idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py:363: JSONDecodeError
+
+The above exception was the direct cause of the following exception:
+
+    def test_real_run_creates_langsmith_trace() -> None:
+        _skip_unless_credentials()
+        assert apply_tracing_env(), "LangSmith tracing is not enabled in settings"
+    
+        retriever = build_retriever(DOCS, embeddings=HashEmbeddings(size=256), k=1)
+        graph = build_graph(get_chat_model(), retriever)
+        thread_id = f"integration-{uuid.uuid4().hex[:8]}"
+>       result = graph.invoke(
+            {"question": "What is LangGraph?"},
+            config={"configurable": {"thread_id": thread_id}},
+        )
+
+tests/integration/test_langsmith_trace.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.14/site-packages/langgraph/pregel/main.py:3913: in invoke
+    for chunk in self.stream(
+.venv/lib/python3.14/site-packages/langgraph/pregel/main.py:2967: in stream
+    for _ in runner.tick(
+.venv/lib/python3.14/site-packages/langgraph/pregel/_runner.py:207: in tick
+    run_with_retry(
+.venv/lib/python3.14/site-packages/langgraph/pregel/_retry.py:617: in run_with_retry
+    return task.proc.invoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langgraph/_internal/_runnable.py:707: in invoke
+    input = context.run(step.invoke, input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langgraph/_internal/_runnable.py:447: in invoke
+    ret = self.func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/docsage/graph/nodes.py:44: in grade
+    parsed = chain.invoke({"document": doc.page_content, "question": state["question"]})
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/runnables/base.py:3456: in invoke
+    input_ = context.run(step.invoke, input_, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/base.py:211: in invoke
+    return self._call_with_config(
+.venv/lib/python3.14/site-packages/langchain_core/runnables/base.py:2301: in _call_with_config
+    context.run(
+.venv/lib/python3.14/site-packages/langchain_core/runnables/config.py:526: in call_func_with_variable_args
+    return func(input, **kwargs)  # type: ignore[call-arg]
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/base.py:212: in <lambda>
+    lambda inner_input: self.parse_result(
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/pydantic.py:77: in parse_result
+    json_object = super().parse_result(result, partial=partial)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PydanticOutputParser(pydantic_object=<class 'docsage.prompts.GradeDocuments'>)
+result = [ChatGeneration(text='Yes', message=AIMessage(content='Yes', additional_kwargs={'refusal': None}, response_metadata={'...ns': 87, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}))]
+partial = False
+
+    @override
+    def parse_result(self, result: list[Generation], *, partial: bool = False) -> Any:
+        """Parse the result of an LLM call to a JSON object.
+    
+        Args:
+            result: The result of the LLM call.
+            partial: Whether to parse partial JSON objects.
+    
+                If `True`, the output will be a JSON object containing all the keys that
+                have been returned so far.
+    
+                If `False`, the output will be the full JSON object.
+    
+        Returns:
+            The parsed JSON object.
+    
+        Raises:
+            OutputParserException: If the output is not valid JSON.
+        """
+        text = result[0].text
+        text = text.strip()
+        if partial:
+            try:
+                return parse_json_markdown(text)
+            except JSONDecodeError:
+                return None
+        else:
+            try:
+                return parse_json_markdown(text)
+            except JSONDecodeError as e:
+                msg = f"Invalid json output: {text}"
+>               raise OutputParserException(msg, llm_output=text) from e
+E               langchain_core.exceptions.OutputParserException: Invalid json output: Yes
+E               For troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE 
+E               During task with name 'grade' and id '7045560a-e0e6-084a-1127-cd45153d8092'
+
+.venv/lib/python3.14/site-packages/langchain_core/output_parsers/json.py:91: OutputParserException
+=========================== short test summary info ============================
+FAILED tests/integration/test_langfuse_trace.py::test_single_run_traces_to_both_platforms
+FAILED tests/integration/test_langsmith_trace.py::test_real_run_creates_langsmith_trace
+2 failed, 80 deselected in 3.48s
